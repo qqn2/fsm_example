@@ -67,7 +67,7 @@ begin
 				assert not (time_set = 'X' or door_open = 'X') report "Unknown values on time_set or door_open" severity WARNING;
 				if (time_set = '1' and door_open = '0') then
 					NS <= OPERATION_ENABLED;
-				elsif (time_set = '1' or door_open = '1') then
+				elsif (time_set = '1' and door_open = '1') then
 					NS <= OPERATION_DISABLED;
 				end if;
 
