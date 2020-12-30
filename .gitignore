@@ -1,0 +1,5 @@
+# Specify filepatterns you want git to ignore.
+transcript
+vsim.wlf
+work/*
+tcl_stacktrace.txt
