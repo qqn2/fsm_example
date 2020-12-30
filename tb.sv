@@ -23,9 +23,10 @@ module tb_ctrl_oven ();
     logic half       ;
     logic finished   ;
     logic in_light   ;
+ `ifndef TOP_TB 
     logic start_count;
     logic stop_count ;
-
+ `endif
 
     `ifdef TOP_TB
         top my_top (.*);   
@@ -180,7 +181,9 @@ module tb_ctrl_oven ();
                 time_set  = 0  ;
                 door_open = 0  ;
                 reset       = 0;
+                `ifndef TOP_TB
                 time_chosen = 0;
+                `endif
                 reset_p();
             end
         endtask : init
@@ -190,6 +193,9 @@ module tb_ctrl_oven ();
             begin
                 @(cb);
                 reset     = 1  ;
+                `ifndef TOP_TB
+                emulate_count = 0;
+                `endif
                 @(cb);
                 reset     = 0  ;
             end
@@ -228,9 +234,7 @@ module tb_ctrl_oven ();
             set_power(1);
             @(full);
             set_time(0);
-            $display("time is %d",$time());  /// HEY
-            repeat(5) @(cb);
-            $display("time is %d",$time());
+            stall(5);
             open_close_door();
             @(in_light);
             open_close_door();
@@ -238,7 +242,7 @@ module tb_ctrl_oven ();
             @(finished);
             open_close_door();
             $display("Test 1 ended at %0d",$time);
-            repeat (2) @(cb);
+            stall(1);
             open_close_door();
         end
     endtask : sequence_one
@@ -255,7 +259,7 @@ module tb_ctrl_oven ();
             @(finished);
             open_close_door();
             $display("Test 2 ended at %0d",$time);
-            repeat (2) @(cb);
+            stall(2);
             open_close_door();
         end
     endtask : sequence_two
@@ -279,7 +283,7 @@ module tb_ctrl_oven ();
             repeat (2) @(cb); // Stall to make transistion complete - complete
             open_close_door();
             $display("Test 3 ended at %0d",$time);
-            repeat (2) @(cb);
+            stall(1);
             open_close_door();
         end
     endtask : sequence_three
@@ -291,9 +295,9 @@ module tb_ctrl_oven ();
             @(full);
             set_time(2);
             start = 1;
-            repeat (10) @(cb); // After 10 clock cycles, open the door
-            @(cb_n) open_close_door();
-            repeat (10) @(cb); // Close the door after 10 clock cycles
+            stall(10);// After 10 clock cycles, open the door
+            open_close_door();
+            stall(10); // Close the door after 10 clock cycles
             reset_p();
             $display("Test 4 ended at %0d",$time);
         end
@@ -306,7 +310,7 @@ module tb_ctrl_oven ();
             set_power(1);
             @(full);
             set_time(0);
-            repeat(5) @(cb);
+            stall(5);
             reset_p();
             $display("Test 5 ended at %0d",$time);
         end
@@ -317,9 +321,8 @@ module tb_ctrl_oven ();
     task sequence_six();
         begin
             set_time(3);
-            time_set = 0;
             set_power(0);
-            repeat (5) @(cb);
+            stall(2);
             reset_p();
             $display("Test 6 ended at %0d",$time);
         end
@@ -333,8 +336,9 @@ module tb_ctrl_oven ();
             set_time(1);
             start = 1;
             @(in_light);
+            stall();
             reset_p();
-            display("Test 7 ended at %0d",$time);
+            $display("Test 7 ended at %0d",$time);
         end
     endtask : sequence_seven
 
@@ -344,6 +348,7 @@ module tb_ctrl_oven ();
             set_power(0);
             @(half);
             set_time(1);
+            start = 1;
             open_close_door();
             @(in_light);
             reset_p();
@@ -390,8 +395,8 @@ module tb_ctrl_oven ();
             sequence_eight();
             drive_almost_every_input_to_zero();
             stall(2);
-            /*
-            // TEST 5 : This one is just edge cases to drive the coverage from 95 to 100
+            
+            // TEST : edge cases to drive the coverage from 98 to 100
             set_time(3);
             repeat (2) @(cb);
             set_power(0);
@@ -406,11 +411,13 @@ module tb_ctrl_oven ();
             time_set = 0;
             repeat(5) @(cb);
             reset_p();
-            */
+            
             $finish;
         end
 
 
+
+`ifdef ASSERT_ON
 
     `ifdef SYNTHESIS_BINARY
         logic ctrl_CS[2:0] = {my_ctrl_oven.CS_2,my_ctrl_oven.CS_1,my_ctrl_oven.CS_0};
@@ -418,8 +425,6 @@ module tb_ctrl_oven ();
         logic ctrl_CS[2:0] = {my_ctrl_oven.CS_2,my_ctrl_oven.CS_1,my_ctrl_oven.CS_0};
     `elsif SYNTHESIS_ONEHOT
         logic ctrl_CS[7:0] = {my_ctrl_oven.finished,my_ctrl_oven.start_count,my_ctrl_oven.CS_5,my_ctrl_oven.CS_4,my_ctrl_oven.CS_3,my_ctrl_oven.half,my_ctrl_oven.full,my_ctrl_oven.CS_0};
-    `else
-        logic ctrl_CS[2:0] = my_ctrl_oven.CS;
     `endif
 
     `ifdef SYNTHESIS_BINARY
@@ -449,16 +454,8 @@ module tb_ctrl_oven ();
         logic CS_is_op_disabled = (ctrl_CS[5] == 1);
         logic CS_is_operating   = (ctrl_CS[6] == 1);
         logic CS_is_complete    = (ctrl_CS[7] == 1);
-    `else
-        logic CS_is_idle        = (ctrl_CS == 3'b000);
-        logic CS_is_full_power  = (ctrl_CS == 3'b001);
-        logic CS_is_half_power  = (ctrl_CS == 3'b010);
-        logic CS_is_set_time    = (ctrl_CS == 3'b011);
-        logic CS_is_op_enabled  = (ctrl_CS == 3'b100);
-        logic CS_is_op_disabled = (ctrl_CS == 3'b101);
-        logic CS_is_operating   = (ctrl_CS == 3'b110);
-        logic CS_is_complete    = (ctrl_CS == 3'b111);
     `endif
+
 
 
     property P1;
@@ -535,7 +532,7 @@ module tb_ctrl_oven ();
     property P15;
         @(posedge clk) disable iff(reset)
             CS_is_complete && !door_open ##1 CS_is_idle;
-
+    endproperty;
 
 
 
@@ -555,6 +552,8 @@ module tb_ctrl_oven ();
         P14_assert : assert property (P14) $display("%0dns Assertion P14 Failed", $time());
         P15_assert : assert property (P15) $display("%0dns Assertion P15 Failed", $time());
 
+
+`endif
 
 
 
