@@ -241,7 +241,11 @@ module tb_ctrl_oven ();
             @(in_light);
             open_close_door(0);
             start = 1;
-            @(finished);
+            `ifdef SYNTHESIS
+                @(CS_is_complete);
+            `else 
+                @(finished);
+            `endif 
             stall(1);
             open_close_door(1);
             $display("Test 1 ended at %0d",$time);
@@ -261,7 +265,11 @@ module tb_ctrl_oven ();
             @(in_light);
             open_close_door(0);
             start = 1;
-            @(finished);
+            `ifdef SYNTHESIS
+                @(CS_is_complete);
+            `else 
+                @(finished);
+            `endif 
             stall(1);
             open_close_door(1);
             $display("Test 2 ended at %0d",$time);
@@ -287,7 +295,11 @@ module tb_ctrl_oven ();
             @(cb_n) open_close_door(1);
             repeat (10) @(cb); // Close the door after 10 clock cycles
             open_close_door(0);
-            @(finished);
+            `ifdef SYNTHESIS
+                @(CS_is_complete);
+            `else 
+                @(finished);
+            `endif 
             repeat (2) @(cb); // Stall to make transistion complete - complete
             open_close_door(1);
             $display("Test 3 ended at %0d",$time);
@@ -427,11 +439,11 @@ module tb_ctrl_oven ();
 
 
     `ifdef SYNTHESIS_BINARY
-        logic ctrl_CS[2:0] = {my_ctrl_oven.CS_2,my_ctrl_oven.CS_1,my_ctrl_oven.CS_0};
+        logic ctrl_CS[2:0] = {my_top.ctrl_oven.CS_2,my_top.ctrl_oven.CS_1,my_top.ctrl_oven.CS_0};
     `elsif SYNTHESIS_GREY
-        logic ctrl_CS[2:0] = {my_ctrl_oven.CS_2,my_ctrl_oven.CS_1,my_ctrl_oven.CS_0};
+        logic ctrl_CS[2:0] = {my_top.ctrl_oven.CS_2,my_top.ctrl_oven.CS_1,my_top.ctrl_oven.CS_0};
     `elsif SYNTHESIS_ONEHOT
-        logic ctrl_CS[7:0] = {my_ctrl_oven.finished,my_ctrl_oven.start_count,my_ctrl_oven.CS_5,my_ctrl_oven.CS_4,my_ctrl_oven.CS_3,my_ctrl_oven.half,my_ctrl_oven.full,my_ctrl_oven.CS_0};
+        logic ctrl_CS[7:0] = {my_top.ctrl_oven.finished,my_top.ctrl_oven.start_count,my_top.ctrl_oven.CS_5,my_top.ctrl_oven.CS_4,my_top.ctrl_oven.CS_3,my_top.ctrl_oven.half,my_top.ctrl_oven.full,my_top.ctrl_oven.CS_0};
     `endif
 
     `ifdef SYNTHESIS_BINARY

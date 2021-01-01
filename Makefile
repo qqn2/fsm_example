@@ -9,17 +9,21 @@ compile_design :
 compile_netlist_binary : 
 	vcom -work work counter_oven.vhd
 	vcom -work work ctrl_oven_syn_binary.vhd
+	vlog +define+TOP_TB+SYNTHESIS+SYNTHESIS_BINARY -work work -suppress 2998 tb.sv
 compile_netlist_grey :
 	vcom -work work counter_oven.vhd
 	vcom -work work ctrl_oven_syn_grey.vhd
+	vlog +define+TOP_TB+SYNTHESIS+SYNTHESIS_GREY -work work -suppress 2998 tb.sv
 compile_netlist_onehot :  
 	vcom -work work counter_oven.vhd
 	vcom -work work ctrl_oven_syn_onehot.vhd
+	vlog +define+TOP_TB+SYNTHESIS+SYNTHESIS_ONEHOT -work work -suppress 2998 tb.sv
 compile_testbench :
-	vcom -work work top.vhd
 	vlog -work work tb.sv
-top:
+compile_tb_top:
 	vlog +define+TOP_TB -work work tb.sv
+
+
 	
 simu_top:
 	vopt work.tb_ctrl_oven +acc -o juicy -cover sbcef2 -nocoverfec -covercells
@@ -34,10 +38,10 @@ simu_netlist:
 all_ctrl : 
 	make clean compile_design compile_testbench simu_ctrl
 all_top : 
-	make clean compile_design compile_testbench top simu_top
+	make clean compile_design compile_tb_top simu_top
 all_syn_bin :
-	make clean corelib compile_netlist_binary compile_testbench top simu_netlist
+	make clean corelib compile_netlist_binary simu_netlist
 all_syn_grey : 
-	make clean corelib compile_netlist_grey compile_testbench top simu_netlist
+	make clean corelib compile_netlist_grey simu_netlist
 all_syn_onehot :
-	make clean corelib compile_netlist_onehot compile_testbench top simu_netlist
+	make clean corelib compile_netlist_onehot simu_netlist
