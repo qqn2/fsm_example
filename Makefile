@@ -9,15 +9,15 @@ compile_design :
 compile_netlist_binary : 
 	vcom -work work counter_oven.vhd
 	vcom -work work ctrl_oven_syn_binary.vhd
-	vlog +define+TOP_TB+SYNTHESIS+SYNTHESIS_BINARY -work work -suppress 2998 tb.sv
+	vlog +define+TOP_TB+SYNTHESIS+SYNTHESIS_BINARY -work work tb.sv
 compile_netlist_grey :
 	vcom -work work counter_oven.vhd
 	vcom -work work ctrl_oven_syn_grey.vhd
-	vlog +define+TOP_TB+SYNTHESIS+SYNTHESIS_GREY -work work -suppress 2998 tb.sv
+	vlog +define+TOP_TB+SYNTHESIS+SYNTHESIS_GREY -work work tb.sv
 compile_netlist_onehot :  
 	vcom -work work counter_oven.vhd
 	vcom -work work ctrl_oven_syn_onehot.vhd
-	vlog +define+TOP_TB+SYNTHESIS+SYNTHESIS_ONEHOT -work work -suppress 2998 tb.sv
+	vlog +define+TOP_TB+SYNTHESIS+SYNTHESIS_ONEHOT -work work tb.sv
 compile_testbench :
 	vlog -work work tb.sv
 compile_tb_top:
