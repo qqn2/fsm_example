@@ -5,3 +5,5 @@ work/*
 tcl_stacktrace.txt
 modelsim.ini
 debug.log
+c35_CORELIB/*
+wlf*

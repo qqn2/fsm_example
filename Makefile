@@ -1,8 +1,7 @@
 corelib:
 	vlib c35_CORELIB
-	vmap c35_CORELIB C:/softslin/AMS_410_CDS/vital/c35/lib_questa2019/c35_CORELIB
+	vmap c35_CORELIB C:/softslin/AMS_410_CDS/vital/c35/lib_questa107/c35_CORELIB
 clean : 
-	vdel work
 	vlib work
 compile_design : 
 	vcom -work work counter_oven.vhd
@@ -28,16 +27,17 @@ simu_top:
 simu_ctrl:
 	vopt work.tb_ctrl_oven +acc -o juicy2 -cover sbcef2 -nocoverfec -covercells
 	vsim juicy2 -vopt -coverage -do "do wave_ctrl_tb.do; run 10000ns"
+	# change config file later
 simu_netlist:
 	vopt work.tb_ctrl_oven +acc -o juicy3 -cover sbcef2 -nocoverfec -covercells
-	vsim juicy3 -vopt -coverage -do "do wave_ctrl_tb.do; run 10000ns" # change config file later
+	vsim juicy3 -vopt -coverage -do "do wave_top.do ; run 10000ns"
 all_ctrl : 
 	make clean compile_design compile_testbench simu_ctrl
 all_top : 
 	make clean compile_design compile_testbench top simu_top
 all_syn_bin :
-	make clean corelib compile_netlist_binary compile_testbench simu_netlist
+	make clean corelib compile_netlist_binary compile_testbench top simu_netlist
 all_syn_grey : 
-	make clean corelib compile_netlist_grey compile_testbench simu_netlist
+	make clean corelib compile_netlist_grey compile_testbench top simu_netlist
 all_syn_onehot :
-	make clean corelib compile_netlist_onehot compile_testbench simu_netlist
+	make clean corelib compile_netlist_onehot compile_testbench top simu_netlist

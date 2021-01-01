@@ -138,13 +138,15 @@ module tb_ctrl_oven ();
 
 
         /* Open or closes the door by inverting current value */
-        function void open_close_door();
+        function void open_close_door(logic in = 0);
             begin
-                door_open = ~door_open;
-                if (door_open)
+                if (door_open) begin
+                    door_open = 1;
                     $display("Door has been opened at %0d",$time);
-                else
+                end else begin 
+                    door_open = 0;
                     $display("Door has been closed at %0d",$time);
+                end
             end
         endfunction
 
@@ -235,15 +237,16 @@ module tb_ctrl_oven ();
             @(full);
             set_time(0);
             stall(5);
-            open_close_door();
+            open_close_door(1);
             @(in_light);
-            open_close_door();
+            open_close_door(0);
             start = 1;
             @(finished);
-            open_close_door();
+            stall(1);
+            open_close_door(1);
             $display("Test 1 ended at %0d",$time);
             stall(1);
-            open_close_door();
+            open_close_door(0);
         end
     endtask : sequence_one
 
@@ -254,17 +257,20 @@ module tb_ctrl_oven ();
             set_power(0);
             @(half);
             set_time(1);
-            open_close_door();
+            open_close_door(1);
             @(in_light);
-            open_close_door();
+            open_close_door(0);
             start = 1;
             @(finished);
-            open_close_door();
+            stall(1);
+            open_close_door(1);
             $display("Test 2 ended at %0d",$time);
             stall(1);
-            open_close_door();
+            open_close_door(0);
         end
     endtask : sequence_two
+
+
 
     /* TEST 3 : FULL POWER -> HALF POWER -> FULL POWER -> S120 -> ENABLED -> OPERATING -> DISABLED -> ENABLED -> OPERATING -> COMPLETE */
     task sequence_three();
@@ -278,15 +284,15 @@ module tb_ctrl_oven ();
             set_time(2);
             start = 1;
             repeat (10) @(cb); // After 10 clock cycles, open the door
-            @(cb_n) open_close_door();
+            @(cb_n) open_close_door(1);
             repeat (10) @(cb); // Close the door after 10 clock cycles
-            open_close_door();
+            open_close_door(0);
             @(finished);
             repeat (2) @(cb); // Stall to make transistion complete - complete
-            open_close_door();
+            open_close_door(1);
             $display("Test 3 ended at %0d",$time);
             stall(1);
-            open_close_door();
+            open_close_door(0);
         end
     endtask : sequence_three
 
@@ -298,7 +304,7 @@ module tb_ctrl_oven ();
             set_time(2);
             start = 1;
             stall(10);// After 10 clock cycles, open the door
-            open_close_door();
+            open_close_door(1);
             stall(10); // Close the door after 10 clock cycles
             reset_p();
             $display("Test 4 ended at %0d",$time);
@@ -351,7 +357,7 @@ module tb_ctrl_oven ();
             @(half);
             set_time(1);
             start = 1;
-            open_close_door();
+            open_close_door(1);
             @(in_light);
             reset_p();
             $display("Test 8 ended at %0d",$time);
@@ -369,6 +375,7 @@ module tb_ctrl_oven ();
 //     ██║   ██╔══╝  ╚════██║   ██║   ╚════██║
 //     ██║   ███████╗███████║   ██║   ███████║
 //     ╚═╝   ╚══════╝╚══════╝   ╚═╝   ╚══════╝
+
 
     initial
         begin
@@ -419,8 +426,6 @@ module tb_ctrl_oven ();
 
 
 
-`ifdef ASSERT_ON
-
     `ifdef SYNTHESIS_BINARY
         logic ctrl_CS[2:0] = {my_ctrl_oven.CS_2,my_ctrl_oven.CS_1,my_ctrl_oven.CS_0};
     `elsif SYNTHESIS_GREY
@@ -458,7 +463,7 @@ module tb_ctrl_oven ();
         logic CS_is_complete    = (ctrl_CS[7] == 1);
     `endif
 
-
+`ifdef ASSERT_ON
 
     property P1;
         @(posedge clk) disable iff(reset)
