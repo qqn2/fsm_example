@@ -214,7 +214,7 @@ module tb_ctrl_oven ();
                     if(emulate_count != time_chosen)
                         @(cb) emulate_count++;
                     else
-                        break;
+                        @(cb) break; 
                 end
 
             if (emulate_count == time_chosen && time_chosen != 0)
@@ -246,6 +246,8 @@ module tb_ctrl_oven ();
             open_close_door();
         end
     endtask : sequence_one
+
+
     /*  TEST 2 : HALF POWER -> S60(SET_TIME) -> DISABLED -> ENABLED -> OPERATING -> COMPLETE */
     task sequence_two();
         begin
@@ -259,7 +261,7 @@ module tb_ctrl_oven ();
             @(finished);
             open_close_door();
             $display("Test 2 ended at %0d",$time);
-            stall(2);
+            stall(1);
             open_close_door();
         end
     endtask : sequence_two
@@ -395,7 +397,7 @@ module tb_ctrl_oven ();
             sequence_eight();
             drive_almost_every_input_to_zero();
             stall(2);
-            
+           
             // TEST : edge cases to drive the coverage from 98 to 100
             set_time(3);
             repeat (2) @(cb);
@@ -411,7 +413,7 @@ module tb_ctrl_oven ();
             time_set = 0;
             repeat(5) @(cb);
             reset_p();
-            
+             
             $finish;
         end
 

@@ -16,7 +16,7 @@ Coverage Report Summary Data by file
 =================================================================================
     Enabled Coverage            Active      Hits    Misses % Covered
     ----------------            ------      ----    ------ ---------
-    Stmts                          199       199         0    100.00
+    Stmts                          190       190         0    100.00
     Branches                        12        12         0    100.00
 
 

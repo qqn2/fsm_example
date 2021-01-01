@@ -3,3 +3,5 @@ transcript
 vsim.wlf
 work/*
 tcl_stacktrace.txt
+modelsim.ini
+debug.log
