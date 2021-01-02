@@ -140,7 +140,7 @@ module tb_ctrl_oven ();
         /* Open or closes the door by inverting current value */
         function void open_close_door(logic in = 0);
             begin
-                if (door_open) begin
+                if (in) begin
                     door_open = 1;
                     $display("Door has been opened at %0d",$time);
                 end else begin 
@@ -242,7 +242,11 @@ module tb_ctrl_oven ();
             open_close_door(0);
             start = 1;
             `ifdef SYNTHESIS
-                @(CS_is_complete);
+               @(finished);
+               @(cb_n);
+               if (!finished) begin
+                   @(finished);
+               end
             `else 
                 @(finished);
             `endif 
@@ -266,7 +270,11 @@ module tb_ctrl_oven ();
             open_close_door(0);
             start = 1;
             `ifdef SYNTHESIS
-                @(CS_is_complete);
+               @(finished);
+               @(cb_n);
+               if (!finished) begin
+                   @(finished);
+               end
             `else 
                 @(finished);
             `endif 
@@ -296,7 +304,11 @@ module tb_ctrl_oven ();
             repeat (10) @(cb); // Close the door after 10 clock cycles
             open_close_door(0);
             `ifdef SYNTHESIS
-                @(CS_is_complete);
+               @(finished);
+               @(cb_n);
+               if (!finished) begin
+                   @(finished);
+               end
             `else 
                 @(finished);
             `endif 
@@ -435,145 +447,4 @@ module tb_ctrl_oven ();
              
             $finish;
         end
-
-
-
-    `ifdef SYNTHESIS_BINARY
-        logic ctrl_CS[2:0] = {my_top.ctrl_oven.CS_2,my_top.ctrl_oven.CS_1,my_top.ctrl_oven.CS_0};
-    `elsif SYNTHESIS_GREY
-        logic ctrl_CS[2:0] = {my_top.ctrl_oven.CS_2,my_top.ctrl_oven.CS_1,my_top.ctrl_oven.CS_0};
-    `elsif SYNTHESIS_ONEHOT
-        logic ctrl_CS[7:0] = {my_top.ctrl_oven.finished,my_top.ctrl_oven.start_count,my_top.ctrl_oven.CS_5,my_top.ctrl_oven.CS_4,my_top.ctrl_oven.CS_3,my_top.ctrl_oven.half,my_top.ctrl_oven.full,my_top.ctrl_oven.CS_0};
-    `endif
-
-    `ifdef SYNTHESIS_BINARY
-        logic CS_is_idle        = (ctrl_CS == 3'b000);
-        logic CS_is_full_power  = (ctrl_CS == 3'b001);
-        logic CS_is_half_power  = (ctrl_CS == 3'b010);
-        logic CS_is_set_time    = (ctrl_CS == 3'b011);
-        logic CS_is_op_enabled  = (ctrl_CS == 3'b100);
-        logic CS_is_op_disabled = (ctrl_CS == 3'b101);
-        logic CS_is_operating   = (ctrl_CS == 3'b110);
-        logic CS_is_complete    = (ctrl_CS == 3'b111);
-    `elsif SYNTHESIS_GREY
-        logic CS_is_idle        = (ctrl_CS == 3'b000);
-        logic CS_is_full_power  = (ctrl_CS == 3'b001);
-        logic CS_is_half_power  = (ctrl_CS == 3'b011);
-        logic CS_is_set_time    = (ctrl_CS == 3'b010);
-        logic CS_is_op_enabled  = (ctrl_CS == 3'b110);
-        logic CS_is_op_disabled = (ctrl_CS == 3'b111);
-        logic CS_is_operating   = (ctrl_CS == 3'b101);
-        logic CS_is_complete    = (ctrl_CS == 3'b100);
-    `elsif SYNTHESIS_ONEHOT
-        logic CS_is_idle        = (ctrl_CS[0] == 1);
-        logic CS_is_full_power  = (ctrl_CS[1] == 1);
-        logic CS_is_half_power  = (ctrl_CS[2] == 1);
-        logic CS_is_set_time    = (ctrl_CS[3] == 1);
-        logic CS_is_op_enabled  = (ctrl_CS[4] == 1);
-        logic CS_is_op_disabled = (ctrl_CS[5] == 1);
-        logic CS_is_operating   = (ctrl_CS[6] == 1);
-        logic CS_is_complete    = (ctrl_CS[7] == 1);
-    `endif
-
-`ifdef ASSERT_ON
-
-    property P1;
-        @(posedge clk) disable iff(reset)
-            CS_is_idle && full_power ##1 CS_is_full_power;
-    endproperty;
-
-    property P2;
-        @(posedge clk) disable iff(reset)
-            CS_is_idle && half_power ##1 CS_is_half_power;
-    endproperty;
-
-    property P3;
-        @(posedge clk) disable iff(reset)
-            CS_is_full_power && half_power ##1 CS_is_half_power;
-    endproperty;
-
-    property P4;
-        @(posedge clk) disable iff(reset)
-            CS_is_full_power && (s30 || s60 || s120) ##1 CS_is_set_time;
-    endproperty;
-
-    property P5;
-        @(posedge clk) disable iff(reset)
-            CS_is_half_power && full_power ##1 CS_is_full_power;
-    endproperty;
-
-    property P6;
-        @(posedge clk) disable iff(reset)
-            CS_is_half_power && (s30 || s60 || s120) ##1 CS_is_set_time;
-    endproperty;
-
-
-    property P7;
-        @(posedge clk) disable iff(reset)
-            CS_is_set_time && time_set && !door_open ##1 CS_is_op_enabled;
-    endproperty;
-
-    property P8;
-        @(posedge clk) disable iff(reset)
-            CS_is_set_time && time_set && door_open ##1 CS_is_op_disabled;
-    endproperty;
-
-    property P9;
-        @(posedge clk) disable iff(reset)
-            CS_is_op_enabled && door_open ##1 CS_is_op_disabled;
-    endproperty;
-
-    property P10;
-        @(posedge clk) disable iff(reset)
-            CS_is_op_enabled && (start && !door_open) ##1 CS_is_operating;
-    endproperty;
-
-    property P11;
-        @(posedge clk) disable iff(reset)
-            CS_is_op_disabled && (!door_open) ##1 CS_is_op_enabled;
-    endproperty;
-
-    property P12;
-        @(posedge clk) disable iff(reset)
-            CS_is_operating && door_open ##1 CS_is_op_enabled;
-    endproperty;
-
-    property P13;
-        @(posedge clk) disable iff(reset)
-            CS_is_operating && door_open ##1 CS_is_op_disabled;
-    endproperty;
-
-    property P14;
-        @(posedge clk) disable iff(reset)
-            CS_is_operating && !door_open && timeout ##1 CS_is_complete;
-    endproperty;
-
-    property P15;
-        @(posedge clk) disable iff(reset)
-            CS_is_complete && !door_open ##1 CS_is_idle;
-    endproperty;
-
-
-
-        P1_assert : assert property (P1) $display("%0dns Assertion P1 Failed", $time());
-        P2_assert : assert property (P2) $display("%0dns Assertion P2 Failed", $time());
-        P3_assert : assert property (P3) $display("%0dns Assertion P3 Failed", $time());
-        P4_assert : assert property (P4) $display("%0dns Assertion P4 Failed", $time());
-        P5_assert : assert property (P5) $display("%0dns Assertion P5 Failed", $time());
-        P6_assert : assert property (P6) $display("%0dns Assertion P6 Failed", $time());
-        P7_assert : assert property (P7) $display("%0dns Assertion P7 Failed", $time());
-        P8_assert : assert property (P8) $display("%0dns Assertion P8 Failed", $time());
-        P9_assert : assert property (P9) $display("%0dns Assertion P9 Failed", $time());
-        P10_assert : assert property (P10) $display("%0dns Assertion P10 Failed", $time());
-        P11_assert : assert property (P11) $display("%0dns Assertion P11 Failed", $time());
-        P12_assert : assert property (P12) $display("%0dns Assertion P12 Failed", $time());
-        P13_assert : assert property (P13) $display("%0dns Assertion P13 Failed", $time());
-        P14_assert : assert property (P14) $display("%0dns Assertion P14 Failed", $time());
-        P15_assert : assert property (P15) $display("%0dns Assertion P15 Failed", $time());
-
-
-`endif
-
-
-
         endmodule
