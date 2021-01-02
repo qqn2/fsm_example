@@ -388,11 +388,6 @@ module tb_ctrl_oven ();
         end
     endtask : sequence_eight
 
-    task sequence_();
-        begin
-        end
-    endtask : sequence_
-
 //  ████████╗███████╗███████╗████████╗███████╗
 //  ╚══██╔══╝██╔════╝██╔════╝╚══██╔══╝██╔════╝
 //     ██║   █████╗  ███████╗   ██║   ███████╗
